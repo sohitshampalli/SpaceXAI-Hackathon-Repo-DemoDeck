@@ -21,9 +21,11 @@ SLIDE_H = Inches(7.5)
 FONT = "Inter"
 INK = RGBColor(0x1C, 0x24, 0x33)
 MUTED = RGBColor(0x5C, 0x67, 0x75)
-PAPER = RGBColor(0xF7, 0xF5, 0xF0)
+PAPER = RGBColor(0xF6, 0xF7, 0xF8)
 WHITE = RGBColor(0xFF, 0xFF, 0xFF)
 SOFT = RGBColor(0xE7, 0xEE, 0xF2)
+MARGIN = Inches(0.8)
+CONTENT_W = Inches(11.73)
 
 
 def _rgb(value: str) -> RGBColor:
@@ -90,59 +92,60 @@ def _paint(shape, color: RGBColor) -> None:
 
 
 def _footer_shapes(slide) -> None:
-    _add_text_box(slide, "footer_text", Inches(0.62), Inches(7.05), Inches(8.4), Inches(0.28))
-    number = _add_text_box(slide, "slide_number", Inches(10.15), Inches(7.05), Inches(2.55), Inches(0.28))
+    _add_text_box(slide, "footer_text", MARGIN, Inches(7.02), Inches(8.0), Inches(0.28))
+    number = _add_text_box(slide, "slide_number", Inches(9.9), Inches(7.02), Inches(2.63), Inches(0.28))
     number.text_frame.paragraphs[0].alignment = PP_ALIGN.RIGHT
 
 
 def _content_chrome(slide) -> None:
     _set_background(slide, PAPER)
     _add_rect(slide, "accent_bar", 0, 0, SLIDE_W, Inches(0.08), RGBColor(0x17, 0x32, 0x4D))
-    _add_text_box(slide, "tag_text", Inches(0.62), Inches(0.32), Inches(11.8), Inches(0.28))
-    _add_text_box(slide, "title_text", Inches(0.62), Inches(0.62), Inches(12.05), Inches(0.95))
-    _add_rect(slide, "divider", Inches(0.62), Inches(1.66), Inches(1.55), Inches(0.045), RGBColor(0xC4, 0x6B, 0x3A))
+    _add_text_box(slide, "tag_text", MARGIN, Inches(0.38), CONTENT_W, Inches(0.28))
+    _add_text_box(slide, "title_text", MARGIN, Inches(0.7), CONTENT_W, Inches(0.88))
+    _add_rect(slide, "divider", MARGIN, Inches(1.68), Inches(1.7), Inches(0.04), RGBColor(0xC4, 0x6B, 0x3A))
     _footer_shapes(slide)
 
 
 def _build_title_slide(slide) -> None:
-    _set_background(slide, PAPER)
-    _add_rect(slide, "accent_bar", 0, 0, Inches(7.2), SLIDE_H, RGBColor(0x17, 0x32, 0x4D))
-    _add_rect(slide, "divider", Inches(7.2), 0, Inches(0.07), SLIDE_H, RGBColor(0xC4, 0x6B, 0x3A))
-    _add_text_box(slide, "tag_text", Inches(0.55), Inches(1.7), Inches(6.1), Inches(0.32))
-    _add_text_box(slide, "title_text", Inches(0.55), Inches(2.15), Inches(6.2), Inches(2.35))
-    _add_text_box(slide, "body_text", Inches(0.55), Inches(4.7), Inches(6.15), Inches(1.45))
-    _add_text_box(slide, "quote_text", Inches(7.7), Inches(2.55), Inches(5.05), Inches(2.6))
-    _add_text_box(slide, "footer_text", Inches(7.7), Inches(6.95), Inches(3.3), Inches(0.28))
-    number = _add_text_box(slide, "slide_number", Inches(10.9), Inches(6.95), Inches(1.85), Inches(0.28))
-    number.text_frame.paragraphs[0].alignment = PP_ALIGN.RIGHT
+    _content_chrome(slide)
+    _add_text_box(slide, "body_text", MARGIN, Inches(2.05), CONTENT_W, Inches(1.55))
+    _add_text_box(slide, "quote_text", MARGIN, Inches(3.9), CONTENT_W, Inches(2.5))
 
 
 def _build_summary_slide(slide) -> None:
     _content_chrome(slide)
-    _add_text_box(slide, "body_text", Inches(0.62), Inches(1.95), Inches(7.35), Inches(4.75))
-    _add_rect(slide, "quote_panel", Inches(8.2), Inches(1.95), Inches(4.5), Inches(4.75), WHITE)
-    _add_text_box(slide, "quote_text", Inches(8.45), Inches(2.18), Inches(4.05), Inches(4.3))
+    _add_text_box(slide, "body_text", MARGIN, Inches(2.0), Inches(7.05), Inches(4.55))
+    _add_rect(slide, "quote_panel", Inches(8.2), Inches(2.0), Inches(4.33), Inches(4.55), WHITE)
+    _add_text_box(slide, "quote_text", Inches(8.48), Inches(2.24), Inches(3.85), Inches(4.1))
 
 
 def _build_pain_slide(slide) -> None:
     _content_chrome(slide)
-    _add_text_box(slide, "body_text", Inches(0.62), Inches(1.9), Inches(12.05), Inches(1.7))
-    _add_rect(slide, "quote_panel", Inches(0.62), Inches(3.85), Inches(12.05), Inches(2.9), WHITE)
-    mark = _add_text_box(slide, "quote_mark", Inches(0.82), Inches(3.95), Inches(0.7), Inches(0.6))
-    mark.text_frame.paragraphs[0].text = "“"
-    _add_text_box(slide, "quote_text", Inches(1.45), Inches(4.15), Inches(10.85), Inches(2.35))
+    _add_text_box(slide, "body_text", MARGIN, Inches(1.95), CONTENT_W, Inches(1.45))
+    _add_rect(slide, "quote_panel", MARGIN, Inches(3.7), Inches(0.05), Inches(2.55), RGBColor(0xC4, 0x6B, 0x3A))
+    mark = _add_text_box(slide, "quote_mark", Inches(1.08), Inches(3.52), Inches(0.85), Inches(0.85))
+    paragraph = mark.text_frame.paragraphs[0]
+    run = paragraph.add_run()
+    run.text = "“"
+    run.font.name = FONT
+    run.font.size = Pt(54)
+    run.font.bold = True
+    run.font.italic = False
+    run.font.color.rgb = RGBColor(0xC4, 0x6B, 0x3A)
+    _lock_typeface(run)
+    _add_text_box(slide, "quote_text", Inches(1.95), Inches(4.15), Inches(10.38), Inches(2.05))
 
 
 def _build_solution_slide(slide) -> None:
     _content_chrome(slide)
-    _add_text_box(slide, "body_text", Inches(0.62), Inches(1.88), Inches(12.05), Inches(0.55))
-    _add_text_box(slide, "quote_text", Inches(0.62), Inches(6.55), Inches(12.05), Inches(0.38))
+    _add_text_box(slide, "body_text", MARGIN, Inches(1.95), CONTENT_W, Inches(0.5))
+    _add_text_box(slide, "quote_text", MARGIN, Inches(6.5), CONTENT_W, Inches(0.38))
 
 
 def _build_standard_slide(slide) -> None:
     _content_chrome(slide)
-    _add_text_box(slide, "body_text", Inches(0.62), Inches(1.95), Inches(12.05), Inches(4.15))
-    _add_text_box(slide, "quote_text", Inches(0.62), Inches(6.2), Inches(12.05), Inches(0.7))
+    _add_text_box(slide, "body_text", MARGIN, Inches(2.0), CONTENT_W, Inches(4.0))
+    _add_text_box(slide, "quote_text", MARGIN, Inches(6.15), CONTENT_W, Inches(0.7))
 
 
 def create_template(path: Path = TEMPLATE_PATH) -> Path:
@@ -205,17 +208,29 @@ def _write(
         _fill_paragraph(paragraph, line, color, size, bold, italic, align, space_after)
 
 
+def _lock_typeface(run) -> None:
+    """python-pptx does not embed font files. Pin every script to Inter so hosts do not fall back to a serif."""
+    run.font.name = FONT
+    r_pr = run._r.get_or_add_rPr()
+    for tag in ("latin", "cs", "ea"):
+        element = r_pr.find(qn(f"a:{tag}"))
+        if element is None:
+            element = r_pr.makeelement(qn(f"a:{tag}"), {})
+            r_pr.append(element)
+        element.set("typeface", FONT)
+
+
 def _fill_paragraph(paragraph, text, color, size, bold, italic, align, space_after) -> None:
     paragraph.alignment = align
     paragraph.space_after = Pt(space_after)
-    paragraph.line_spacing = 1.08
+    paragraph.line_spacing = 1.15
     run = paragraph.add_run()
     run.text = text
-    run.font.name = FONT
     run.font.size = Pt(size)
     run.font.bold = bold
     run.font.italic = italic
     run.font.color.rgb = color
+    _lock_typeface(run)
 
 
 def _write_pairs(shape, pairs: list[tuple[str, str]], label_color: RGBColor, value_color: RGBColor) -> None:
@@ -235,10 +250,11 @@ def _write_pairs(shape, pairs: list[tuple[str, str]], label_color: RGBColor, val
         paragraph.space_after = Pt(space_after)
         run = paragraph.add_run()
         run.text = text
-        run.font.name = FONT
         run.font.size = Pt(size)
         run.font.bold = bold
+        run.font.italic = False
         run.font.color.rgb = color
+        _lock_typeface(run)
 
     started = False
     for label, value in pairs:
@@ -250,10 +266,11 @@ def _recolor_runs(shape, color: RGBColor, size: int | None = None) -> None:
     for paragraph in shape.text_frame.paragraphs:
         for run in paragraph.runs:
             run.font.color.rgb = color
-            run.font.name = FONT
+            run.font.italic = False
             if size:
                 run.font.size = Pt(size)
             run.font.bold = True
+            _lock_typeface(run)
 
 
 def _duplicate_slide(presentation: Presentation, index: int):
@@ -331,9 +348,12 @@ def _apply_brand(slide, primary: RGBColor, secondary: RGBColor) -> None:
     if divider is not None:
         _paint(divider, secondary)
     if panel is not None:
-        _paint(panel, _tint(primary, 0.93))
+        if panel.width < Inches(0.2):
+            _paint(panel, secondary)
+        else:
+            _paint(panel, _tint(primary, 0.93))
     if mark is not None:
-        _recolor_runs(mark, secondary, size=42)
+        _recolor_runs(mark, secondary, size=54)
 
 
 def _stamp(slide, salesperson: str, number: int, total: int, *, light: bool = False) -> None:
@@ -360,11 +380,11 @@ def _set_cell(cell, text: str, fill: RGBColor, font_color: RGBColor, *, bold: bo
     paragraph.alignment = PP_ALIGN.LEFT
     run = paragraph.add_run()
     run.text = text
-    run.font.name = FONT
     run.font.size = Pt(size)
     run.font.bold = bold
     run.font.italic = italic
     run.font.color.rgb = font_color
+    _lock_typeface(run)
 
 
 def _solution_table(slide, pains: list[dict], primary: RGBColor, secondary: RGBColor) -> None:
@@ -373,15 +393,15 @@ def _solution_table(slide, pains: list[dict], primary: RGBColor, secondary: RGBC
     shape = slide.shapes.add_table(
         row_count,
         3,
-        Inches(0.62),
-        Inches(2.55),
-        Inches(12.05),
+        MARGIN,
+        Inches(2.58),
+        CONTENT_W,
         table_height,
     )
     table = shape.table
     table.columns[0].width = Inches(0.85)
-    table.columns[1].width = Inches(5.35)
-    table.columns[2].width = Inches(5.85)
+    table.columns[1].width = Inches(5.2)
+    table.columns[2].width = Inches(5.68)
     header = _on_color(primary)
     solve_fill = _tint(secondary, 0.88)
     _set_cell(table.cell(0, 0), "", primary, header, bold=True, size=12)
@@ -414,7 +434,6 @@ def build_deck(
         create_template(template_path)
     primary = _rgb(brand_color_primary)
     secondary = _rgb(brand_color_secondary)
-    on_primary = _on_color(primary)
     company = _company_label(analysis, company_name)
     pains = list(analysis.get("pain_points") or [])[:4]
     news = (enrichment or {}).get("recent_news_snippet")
@@ -442,12 +461,11 @@ def build_deck(
         _apply_brand(slide, primary, secondary)
 
     _write(_shape_by_name(title_slide, "tag_text"), "OPPORTUNITY BRIEF", secondary, 13, bold=True, space_after=0)
-    _write(_shape_by_name(title_slide, "title_text"), company, on_primary, 40, bold=True, space_after=0)
-    panel_body = SOFT if on_primary == WHITE else INK
+    _write(_shape_by_name(title_slide, "title_text"), company, primary, 40, bold=True, space_after=0)
     _write(
         _shape_by_name(title_slide, "body_text"),
         f"Prepared by {salesperson}\nA leave-behind from the call. The solve column is left blank on purpose.",
-        panel_body,
+        INK,
         16,
         space_after=10,
     )
@@ -493,7 +511,7 @@ def build_deck(
             point.get("quote", "").strip(),
             INK,
             18,
-            italic=True,
+            italic=False,
             space_after=0,
         )
 
@@ -511,7 +529,6 @@ def build_deck(
         "The right column stays empty until you write it.",
         MUTED,
         13,
-        italic=True,
         space_after=0,
     )
     _solution_table(solution_slide, pains, primary, secondary)
@@ -543,7 +560,6 @@ def build_deck(
         "Numbers on this slide are blank so the salesperson can complete them after the call.",
         MUTED,
         13,
-        italic=True,
         space_after=0,
     )
 
