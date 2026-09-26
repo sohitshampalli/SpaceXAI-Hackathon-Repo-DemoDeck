@@ -42,8 +42,8 @@ module.exports = {
         pill: "9999px",
       },
       boxShadow: {
-        card: "0 1px 2px rgba(0,0,0,0.4), 0 8px 24px -4px rgba(0,0,0,0.5)",
-        glow: "0 0 24px rgba(124,106,239,0.25), 0 1px 2px rgba(0,0,0,0.4), 0 8px 24px -4px rgba(0,0,0,0.5)",
+        card: "0 1px 1px rgba(0,0,0,0.28), 0 16px 40px -16px rgba(0,0,0,0.65)",
+        glow: "0 0 0 1px rgba(124,106,239,0.45), 0 16px 40px -16px rgba(0,0,0,0.65)",
       },
       transitionDuration: {
         hover: "150ms",

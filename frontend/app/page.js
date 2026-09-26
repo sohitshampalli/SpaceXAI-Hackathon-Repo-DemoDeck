@@ -116,7 +116,7 @@ function FieldLabel({ htmlFor, children, optional }) {
 }
 
 const fieldClass =
-  "w-full rounded-control border border-line bg-canvas px-3 py-[10px] text-body text-text outline-none transition duration-hover ease-hover placeholder:text-disabled hover:border-white/20 focus:border-accent focus:ring-2 focus:ring-accent/40";
+  "w-full rounded-control bg-canvas px-3 py-[10px] text-body text-text shadow-card outline-none transition duration-hover ease-hover placeholder:text-disabled hover:bg-surface-hover focus:ring-2 focus:ring-accent/50";
 
 function DropZone({ id, label, hint, accept, file, onFile, previewUrl, durationLabel, warning, audio }) {
   const [hot, setHot] = useState(false);
@@ -174,7 +174,7 @@ function DropZone({ id, label, hint, accept, file, onFile, previewUrl, durationL
         {previewUrl ? (
           <img src={previewUrl} alt="" className="mx-auto mb-4 h-16 max-w-[180px] object-contain" />
         ) : (
-          <span className="mx-auto mb-4 flex h-10 w-10 items-center justify-center rounded-control border border-line bg-surface text-muted">
+          <span className="mx-auto mb-4 flex h-10 w-10 items-center justify-center rounded-control bg-surface text-accent shadow-card">
             {file && audio ? <AudioLines strokeWidth={1.5} size={18} /> : <Upload strokeWidth={1.5} size={18} />}
           </span>
         )}
@@ -212,7 +212,7 @@ function ColorField({ id, label, value, onChange }) {
   return (
     <div>
       <FieldLabel htmlFor={id}>{label}</FieldLabel>
-      <div className="flex items-center gap-3 rounded-control border border-line bg-canvas px-3 py-2 transition duration-hover ease-hover hover:border-white/20 focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/40">
+      <div className="flex items-center gap-3 rounded-control bg-canvas px-3 py-2 shadow-card transition duration-hover ease-hover hover:bg-surface-hover focus-within:ring-2 focus-within:ring-accent/50">
         <input
           id={id}
           name={id}
@@ -220,7 +220,7 @@ function ColorField({ id, label, value, onChange }) {
           value={value}
           aria-label={label}
           onChange={(event) => onChange(event.target.value)}
-          className="h-8 w-8 cursor-pointer rounded-control border border-line bg-transparent p-0"
+          className="h-8 w-8 cursor-pointer rounded-control bg-transparent p-0"
         />
         <span className="font-mono text-body uppercase text-muted">{value}</span>
       </div>
@@ -243,21 +243,21 @@ function Stepper({ status, failed }) {
         const state = stepState(status, failed, index);
         const Icon = state === "complete" ? Check : step.icon;
         return (
-          <li
+            <li
             key={step.key}
             className={cx(
-              "rounded-card border border-line bg-surface px-4 py-4 shadow-card transition duration-state ease-state",
-              state === "active" && "border-accent/50",
-              state === "failed" && "border-sev-high/50",
+              "rounded-card bg-surface px-4 py-4 shadow-card transition duration-state ease-state",
+              state === "active" && "shadow-glow",
+              state === "failed" && "ring-1 ring-sev-high/40",
             )}
           >
             <span
               className={cx(
-                "mb-4 flex h-8 w-8 items-center justify-center rounded-control border",
-                state === "complete" && "border-cyan/40 text-cyan",
-                state === "active" && "border-accent/40 text-accent",
-                state === "failed" && "border-sev-high/40 text-sev-high",
-                state === "pending" && "border-line text-disabled",
+                "mb-4 flex h-8 w-8 items-center justify-center rounded-control",
+                state === "complete" && "bg-accent/15 text-accent",
+                state === "active" && "bg-accent text-white",
+                state === "failed" && "bg-sev-high/15 text-sev-high",
+                state === "pending" && "bg-canvas text-disabled",
               )}
               aria-hidden="true"
             >
@@ -276,7 +276,7 @@ function SkeletonCards() {
   return (
     <div className="mt-8 grid gap-4" aria-hidden="true">
       {[0, 1, 2].map((item) => (
-        <div key={item} className="rounded-card border border-line bg-surface p-6 shadow-card">
+        <div key={item} className="rounded-card bg-surface p-6 shadow-card">
           <div className="skeleton h-3 w-24 rounded-pill" />
           <div className="skeleton mt-4 h-4 w-2/3 rounded-control" />
           <div className="skeleton mt-3 h-3 w-full rounded-control" />
@@ -289,7 +289,7 @@ function SkeletonCards() {
 
 function Signal({ label, value }) {
   return (
-    <div className="rounded-card border border-line bg-surface px-4 py-4 shadow-card">
+    <div className="rounded-card bg-surface px-4 py-4 shadow-card">
       <p className="text-eyebrow uppercase text-muted">{label}</p>
       <p className="mt-2 text-card text-text">{value}</p>
     </div>
@@ -448,31 +448,28 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-canvas">
-      <header className="border-b border-line">
+      <header>
         <div className="mx-auto flex h-16 max-w-5xl items-center px-6">
           <Wordmark />
         </div>
       </header>
 
-      <main className="mx-auto max-w-5xl px-6 pb-16 pt-16">
+      <main className="mx-auto max-w-5xl px-6 pb-24 pt-20">
         {view === "upload" ? (
           <section className="state-enter relative">
             <div
               aria-hidden="true"
               className="pointer-events-none absolute -top-24 left-1/2 h-72 w-[36rem] -translate-x-1/2 rounded-full opacity-70 blur-3xl"
               style={{
-                background:
-                  "radial-gradient(closest-side, rgba(124,106,239,0.28), rgba(34,211,238,0.08) 55%, transparent 72%)",
+                background: "radial-gradient(closest-side, rgba(124,106,239,0.22), transparent 72%)",
               }}
             />
             <div className="relative">
               <p className="text-eyebrow uppercase text-muted">From the recording</p>
               <h1 className="mt-4 max-w-3xl text-hero-mobile text-text md:text-hero">Turn any sales call into a pitch deck.</h1>
-              <p className="mt-6 max-w-xl text-body text-muted">
-                Transcribed on this machine. Pain points in the customer’s words. A deck in your colors, with the solve column left blank.
-              </p>
+              <p className="mt-6 max-w-xl text-body text-muted">The customer’s words, in your colors. The solve column stays blank.</p>
 
-              <form id={formId} className="mt-12 rounded-card border border-line bg-surface p-6 shadow-card md:p-8" onSubmit={onSubmit}>
+              <form id={formId} className="mt-16 rounded-card bg-surface p-6 shadow-card md:p-8" onSubmit={onSubmit}>
                 <h2 className="text-section text-text">The recording</h2>
                 <div className="mt-6">
                   <DropZone
@@ -545,7 +542,7 @@ export default function HomePage() {
                       onChange={(value) => setForm({ ...form, brand_color_secondary: value })}
                     />
                   </div>
-                  <p className="mt-3 text-body text-muted">Used on the slides only. This page stays indigo.</p>
+                  <p className="mt-3 text-body text-muted">These colors land on the slides. This page stays indigo.</p>
                 </fieldset>
 
                 <div className="mt-6">
@@ -603,7 +600,7 @@ export default function HomePage() {
               <button
                 type="button"
                 onClick={reset}
-                className="mt-8 rounded-control border border-line bg-surface px-4 py-3 text-button text-text shadow-card transition duration-hover ease-hover hover:bg-surface-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-canvas"
+                className="mt-8 rounded-control bg-surface px-4 py-3 text-button text-text shadow-card transition duration-hover ease-hover hover:bg-surface-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-canvas"
               >
                 Start over
               </button>
@@ -612,13 +609,13 @@ export default function HomePage() {
         ) : null}
 
         {view === "results" ? (
-          <section className="state-enter">
-            <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+          <section className="state-enter" style={deckStyle}>
+            <div className="flex flex-col gap-8 sm:flex-row sm:items-end sm:justify-between">
               <div>
-                <span className="check-in mb-4 flex h-10 w-10 items-center justify-center rounded-full border border-cyan/40 text-cyan">
+                <span className="check-in mb-4 flex h-10 w-10 items-center justify-center rounded-full bg-accent/15 text-accent">
                   <Check strokeWidth={1.5} size={18} />
                 </span>
-                <p className="text-eyebrow uppercase text-cyan">Deck ready</p>
+                <p className="text-eyebrow uppercase text-accent">Deck ready</p>
                 <h1 className="mt-3 text-section text-text">{customer}</h1>
                 {analysis?.call_summary ? <p className="mt-3 max-w-2xl text-body text-muted">{analysis.call_summary}</p> : null}
               </div>
@@ -632,14 +629,17 @@ export default function HomePage() {
             </div>
 
             {preview?.placeholder ? (
-              <p className="mt-6 rounded-card border border-line bg-surface px-4 py-3 text-body text-muted">
+              <p className="mt-8 rounded-card bg-surface px-4 py-3 text-body text-muted shadow-card">
                 Slide images are placeholders. The download is the real deck.
               </p>
             ) : null}
 
             {slides.length ? (
-              <div className="deck-preview mt-10 rounded-card border border-line bg-surface p-4 shadow-card sm:p-6" style={deckStyle}>
-                <div className="mb-4 h-1 w-16 rounded-pill" style={{ background: "var(--deck-primary)" }} />
+              <div className="deck-preview mt-16 rounded-card bg-surface p-4 shadow-card sm:p-6">
+                <div className="mb-6 flex gap-2" aria-hidden="true">
+                  <div className="h-1 w-16 rounded-pill" style={{ background: "var(--deck-primary)" }} />
+                  <div className="h-1 w-6 rounded-pill" style={{ background: "var(--deck-secondary)" }} />
+                </div>
                 <div className="flex items-end justify-between gap-4">
                   <h2 className="text-section text-text">Slides</h2>
                   <p className="font-mono text-body text-muted">{String(slides.length).padStart(2, "0")}</p>
@@ -651,7 +651,7 @@ export default function HomePage() {
                       type="button"
                       onClick={() => setModalIndex(index)}
                       aria-label={`Open slide ${index + 1}`}
-                      className="group overflow-hidden rounded-card border border-line bg-canvas text-left shadow-card transition duration-hover ease-hover hover:scale-[1.02] hover:shadow-glow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
+                      className="deck-thumb group overflow-hidden rounded-card bg-canvas text-left shadow-card transition duration-hover ease-hover hover:scale-[1.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
                     >
                       <img src={`${API_URL}${slide.url}`} alt="" className="aspect-video w-full object-cover" />
                       <span className="block px-3 py-2 font-mono text-[12px] text-muted">
@@ -674,7 +674,7 @@ export default function HomePage() {
                     return (
                       <article
                         key={point.id}
-                        className="rounded-card border border-line bg-surface p-6 shadow-card transition duration-hover ease-hover hover:scale-[1.02] hover:bg-surface-hover"
+                        className="rounded-card bg-surface p-6 shadow-card transition duration-hover ease-hover hover:scale-[1.02] hover:bg-surface-hover"
                         style={{ borderLeftWidth: 3, borderLeftColor: severity }}
                       >
                         <div className="flex flex-wrap items-center gap-3">
@@ -691,7 +691,7 @@ export default function HomePage() {
                         </div>
                         <h3 className="mt-4 text-card text-text">{point.title}</h3>
                         <p className="mt-2 text-body text-muted">{point.description}</p>
-                        <blockquote className="relative mt-4 rounded-control border border-line bg-canvas px-4 py-3 pl-10 text-body text-text">
+                        <blockquote className="relative mt-4 rounded-control bg-canvas px-4 py-3 pl-10 text-body text-text shadow-card">
                           <span aria-hidden="true" className="absolute left-3 top-1 text-[28px] leading-none text-accent">
                             “
                           </span>
@@ -713,7 +713,7 @@ export default function HomePage() {
                 </div>
 
                 <h2 className="mt-12 text-section text-text">Objections</h2>
-                <div className="mt-6 overflow-hidden rounded-card border border-line bg-surface shadow-card">
+                <div className="mt-6 overflow-hidden rounded-card bg-surface shadow-card">
                   <table className="w-full text-left">
                     <thead>
                       <tr className="border-b border-line">
@@ -743,7 +743,7 @@ export default function HomePage() {
                 <h2 className="mt-12 text-section text-text">Next steps</h2>
                 <ol className="mt-6 grid gap-3">
                   {(analysis.next_steps || []).map((step, index) => (
-                    <li key={step} className="flex gap-4 rounded-card border border-line bg-surface px-4 py-4 shadow-card">
+                    <li key={step} className="flex gap-4 rounded-card bg-surface px-4 py-4 shadow-card">
                       <span className="font-mono text-body text-muted">{String(index + 1).padStart(2, "0")}</span>
                       <span className="text-body text-text">{step}</span>
                     </li>
@@ -751,7 +751,7 @@ export default function HomePage() {
                 </ol>
 
                 {analysis.recommended_solution_angle ? (
-                  <div className="mt-6 rounded-card border border-line bg-surface p-6 shadow-card">
+                  <div className="mt-6 rounded-card bg-surface p-6 shadow-card">
                     <p className="text-eyebrow uppercase text-muted">Suggested angle</p>
                     <p className="mt-3 text-body text-text">{analysis.recommended_solution_angle}</p>
                   </div>
@@ -760,10 +760,10 @@ export default function HomePage() {
                 {hasEnrichment ? (
                   <div className="mt-12">
                     <h2 className="text-section text-text">Company</h2>
-                    <article className="mt-6 rounded-card border border-line bg-surface p-6 shadow-card">
+                    <article className="mt-6 rounded-card bg-surface p-6 shadow-card">
                       <div className="flex items-start gap-4">
                         {enrichment.logo_url ? (
-                          <img src={enrichment.logo_url} alt="" className="h-12 w-12 rounded-control border border-line bg-canvas object-contain p-1" />
+                          <img src={enrichment.logo_url} alt="" className="h-12 w-12 rounded-control bg-canvas object-contain p-1 shadow-card" />
                         ) : null}
                         <div>
                           <p className="text-eyebrow uppercase text-muted">{enrichment.source}</p>
@@ -784,7 +784,7 @@ export default function HomePage() {
             <button
               type="button"
               onClick={reset}
-              className="mt-12 rounded-control border border-line bg-surface px-4 py-3 text-button text-text transition duration-hover ease-hover hover:bg-surface-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-canvas"
+              className="mt-16 rounded-control bg-surface px-4 py-3 text-button text-text shadow-card transition duration-hover ease-hover hover:bg-surface-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-canvas"
             >
               New recording
             </button>
@@ -792,10 +792,10 @@ export default function HomePage() {
         ) : null}
       </main>
 
-      <footer className="border-t border-line">
-        <div className="mx-auto max-w-5xl px-6 py-8">
-          <Wordmark muted size={20} />
-          <p className="mt-2 text-[12px] text-muted">Built at SpaceXAI Hackathon.</p>
+      <footer>
+        <div className="mx-auto max-w-5xl px-6 pb-12">
+          <p className="text-body font-medium text-muted">Demo to Deck</p>
+          <p className="mt-1 text-[12px] text-muted">A sales call, returned as a deck.</p>
         </div>
       </footer>
 
@@ -808,7 +808,7 @@ export default function HomePage() {
             role="dialog"
             aria-modal="true"
             aria-label={`Slide ${modalIndex + 1}`}
-            className="w-full max-w-5xl rounded-card border border-line bg-surface p-4 shadow-card sm:p-6"
+            className="deck-preview w-full max-w-5xl rounded-card bg-surface p-4 shadow-card sm:p-6"
             style={deckStyle}
             onClick={(event) => event.stopPropagation()}
           >
@@ -821,7 +821,7 @@ export default function HomePage() {
                 type="button"
                 aria-label="Close preview"
                 onClick={() => setModalIndex(null)}
-                className="flex h-9 w-9 items-center justify-center rounded-control border border-line text-text transition duration-hover ease-hover hover:bg-surface-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                className="flex h-9 w-9 items-center justify-center rounded-control bg-canvas text-text shadow-card transition duration-hover ease-hover hover:bg-surface-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
               >
                 <X strokeWidth={1.5} size={16} />
               </button>
@@ -829,7 +829,7 @@ export default function HomePage() {
             <img
               src={`${API_URL}${slides[modalIndex].url}`}
               alt={`Slide ${modalIndex + 1} of ${slides.length}`}
-              className="w-full rounded-control border border-line bg-canvas"
+              className="w-full rounded-control bg-canvas"
               style={{ boxShadow: "inset 3px 0 0 var(--deck-primary)" }}
             />
             <div className="mt-4 flex gap-3">
@@ -838,7 +838,7 @@ export default function HomePage() {
                 aria-label="Previous slide"
                 disabled={modalIndex === 0}
                 onClick={() => setModalIndex((index) => Math.max(0, index - 1))}
-                className="inline-flex items-center gap-2 rounded-control border border-line bg-canvas px-3 py-2 text-button text-text transition duration-hover ease-hover hover:bg-surface-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:text-disabled"
+                className="inline-flex items-center gap-2 rounded-control bg-canvas px-3 py-2 text-button text-text shadow-card transition duration-hover ease-hover hover:bg-surface-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:text-disabled"
               >
                 <ChevronLeft strokeWidth={1.5} size={16} />
                 Previous
@@ -848,7 +848,7 @@ export default function HomePage() {
                 aria-label="Next slide"
                 disabled={modalIndex === slides.length - 1}
                 onClick={() => setModalIndex((index) => Math.min(slides.length - 1, index + 1))}
-                className="inline-flex items-center gap-2 rounded-control border border-line bg-canvas px-3 py-2 text-button text-text transition duration-hover ease-hover hover:bg-surface-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:text-disabled"
+                className="inline-flex items-center gap-2 rounded-control bg-canvas px-3 py-2 text-button text-text shadow-card transition duration-hover ease-hover hover:bg-surface-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:text-disabled"
               >
                 Next
                 <ChevronRight strokeWidth={1.5} size={16} />

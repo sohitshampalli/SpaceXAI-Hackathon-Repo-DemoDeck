@@ -70,6 +70,11 @@
   animation: check-in 300ms ease-out;
 }
 
+.deck-preview .deck-thumb:hover,
+.deck-preview .deck-thumb:focus-visible {
+  box-shadow: 0 16px 40px -16px rgba(0, 0, 0, 0.65), 0 0 0 2px var(--deck-secondary);
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
