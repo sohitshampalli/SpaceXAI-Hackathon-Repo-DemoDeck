@@ -128,6 +128,24 @@ The frontend is a Next.js app in `frontend/`.
 
 `netlify.toml` sets the base directory and build command. Point `CORS_ORIGINS` on Render at the resulting Netlify origin. Publishing to Netlify was not done from this workspace.
 
+## Measured locally
+
+These numbers are from this workspace: 4 vCPU, 15 GB RAM, no GPU. The clip was a 4.9 minute synthetic English sales call made with espeak-ng and kept outside the repo. `FIRECRAWL_API_KEY` and `EXA_API_KEY` were unset, so enrichment returned nulls (`source: none`) and the job still finished. Raw audio was deleted after transcription.
+
+| Run | What ran | Time |
+| --- | --- | --- |
+| Full pipeline, qwen cold | `qwen2.5:3b-instruct` | 98.4 s |
+| Full pipeline, qwen already loaded | `qwen2.5:3b-instruct` | 106.9 s |
+| Extraction only | `llama3.1:8b` | 150.0 s |
+
+On the 98.4 s run, transcription plus enrichment finished in about 24 s, extraction took about 70 s, and the deck plus previews took about 4 s. A direct qwen generation of the same transcript was 578 output tokens in 45.5 s, plus about 11 s to score the prompt. llama3.1:8b produced 560 tokens in 108 s of generation after a 32 s prompt pass. Neither full run landed under 90 seconds on this machine.
+
+**Cleaner JSON: `qwen2.5:3b-instruct`.** It kept the stated project budget ($80,000 this fiscal year), a quarter-end timeline, and longer quotes that are present in the transcript. `llama3.1:8b` also returned valid JSON, but it stored the budget as the "$20 million book" (the size of the book of business, not the project budget) and labeled the forecast miss as compliance. Its recommended angle stayed closer to the Dallas pilot that was actually discussed. Both models marked the implementation objection as still open even though the rep proposed a phased pilot. Whisper also mishears some espeak phrases, so a quote can be verbatim to the transcript and still not match the original script.
+
+Live Firecrawl and Exa calls were not tested. The missing-key path was.
+
+Render and Netlify were not deployed from this workspace.
+
 ## Known limitations
 
 - There is no speaker diarization. The extractor infers who is talking from the undivided transcript.
