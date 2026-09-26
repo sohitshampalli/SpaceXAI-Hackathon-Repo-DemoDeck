@@ -1,0 +1,88 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    background: #0a0a0f;
+  }
+
+  body {
+    @apply bg-canvas font-sans text-body text-text antialiased;
+  }
+
+  ::selection {
+    background: rgba(124, 106, 239, 0.35);
+    color: #f5f5f7;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.skeleton {
+  background-image: linear-gradient(
+    90deg,
+    #14141c 0%,
+    #191922 42%,
+    #22222c 50%,
+    #191922 58%,
+    #14141c 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s linear infinite;
+}
+
+@keyframes state-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.state-enter {
+  animation: state-enter 300ms ease-out;
+}
+
+@keyframes check-in {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.check-in {
+  animation: check-in 300ms ease-out;
+}
+
+.deck-preview .deck-thumb:hover,
+.deck-preview .deck-thumb:focus-visible {
+  box-shadow: 0 16px 40px -16px rgba(0, 0, 0, 0.65), 0 0 0 2px var(--deck-secondary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .skeleton,
+  .state-enter,
+  .check-in {
+    animation: none;
+  }
+}

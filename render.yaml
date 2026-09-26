@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: demo-to-deck
+    runtime: docker
+    plan: pro_plus
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    envVars:
+      - key: OLLAMA_MODEL
+        value: qwen2.5:3b-instruct
+      - key: WHISPER_MODEL_SIZE
+        value: small.en
+      - key: MAX_AUDIO_MINUTES
+        value: "20"
+      - key: MAX_UPLOAD_MB
+        value: "100"
+      - key: CORS_ORIGINS
+        sync: false
+      - key: FIRECRAWL_API_KEY
+        sync: false
+      - key: EXA_API_KEY
+        sync: false
