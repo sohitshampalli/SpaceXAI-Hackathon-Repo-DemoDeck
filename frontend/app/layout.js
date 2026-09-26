@@ -1,14 +1,18 @@
+import { Inter } from "next/font/google";
+
 import "./globals.css";
+
+const inter = Inter({ subsets: ["latin"], display: "swap" });
 
 export const metadata = {
   title: "Demo to Deck",
-  description: "Turn a sales call into a customer-specific deck.",
+  description: "Turn a raw sales call into a branded, customer-specific deck.",
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body className={inter.className}>{children}</body>
     </html>
   );
 }
