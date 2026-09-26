@@ -1,22 +1,42 @@
 "use client";
 
+import {
+  AudioLines,
+  Building2,
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  Download,
+  Presentation,
+  Search,
+  Upload,
+  X,
+} from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
 
 const API_URL = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000").replace(/\/$/, "");
 
-const STEPS = [
-  { id: "queued", label: "Queued", detail: "Waiting to start" },
-  { id: "transcribing", label: "Transcribing", detail: "Listening to the call locally" },
-  { id: "enriching", label: "Enriching", detail: "Checking public company info" },
-  { id: "extracting", label: "Extracting", detail: "Pulling pain points on this machine" },
-  { id: "building", label: "Building deck", detail: "Laying out the branded slides" },
-  { id: "previewing", label: "Rendering preview", detail: "Turning slides into images" },
+const PIPELINE = [
+  { key: "uploading", label: "Uploading", match: ["queued"], icon: Upload },
+  { key: "transcribing", label: "Transcribing", match: ["transcribing"], icon: AudioLines },
+  { key: "enriching", label: "Enriching", match: ["enriching"], icon: Building2 },
+  { key: "extracting", label: "Extracting pain points", match: ["extracting"], icon: Search },
+  { key: "generating", label: "Generating deck", match: ["building", "previewing"], icon: Presentation },
 ];
 
-const SEVERITY_STYLE = {
-  high: "bg-red-50 text-red-800 ring-red-200",
-  medium: "bg-amber-50 text-amber-900 ring-amber-200",
-  low: "bg-emerald-50 text-emerald-800 ring-emerald-200",
+const SEVERITY = {
+  high: "#FB7185",
+  medium: "#FBBF24",
+  low: "#9A9AA5",
+};
+
+const CATEGORY = {
+  cost: "#FBBF24",
+  efficiency: "#22D3EE",
+  risk: "#FB7185",
+  growth: "#34D399",
+  compliance: "#7C6AEF",
+  other: "#9A9AA5",
 };
 
 function cx(...parts) {
@@ -59,7 +79,46 @@ function readDuration(file) {
   });
 }
 
-function DropZone({ id, label, hint, accept, file, onFile, previewUrl, durationLabel, warning }) {
+function Mark({ size = 28, title }) {
+  const raw = useId().replace(/:/g, "");
+  const grad = `mark-${raw}`;
+  return (
+    <svg width={size} height={size} viewBox="0 0 28 28" aria-hidden={title ? undefined : true} role={title ? "img" : undefined}>
+      {title ? <title>{title}</title> : null}
+      <defs>
+        <linearGradient id={grad} x1="2" y1="26" x2="26" y2="2" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#7C6AEF" />
+          <stop offset="1" stopColor="#22D3EE" />
+        </linearGradient>
+      </defs>
+      <path fill={`url(#${grad})`} d="M8 1h10.2L27 9.8V20a7 7 0 0 1-7 7H8a7 7 0 0 1-7-7V8a7 7 0 0 1 7-7z" />
+      <path fill="#F5F5F7" fillOpacity="0.42" d="M18.2 1 27 9.8h-4.6A4.2 4.2 0 0 1 18.2 5.6V1z" />
+    </svg>
+  );
+}
+
+function Wordmark({ muted = false, size = 28 }) {
+  return (
+    <span className="inline-flex items-center gap-3">
+      <Mark size={size} />
+      <span className={cx("text-[16px] font-semibold tracking-tight", muted ? "text-muted" : "text-text")}>Demo to Deck</span>
+    </span>
+  );
+}
+
+function FieldLabel({ htmlFor, children, optional }) {
+  return (
+    <label htmlFor={htmlFor} className="mb-2 block text-eyebrow uppercase text-muted">
+      {children}
+      {optional ? <span className="ml-2 normal-case tracking-normal text-disabled">Optional</span> : null}
+    </label>
+  );
+}
+
+const fieldClass =
+  "w-full rounded-control border border-line bg-canvas px-3 py-[10px] text-body text-text outline-none transition duration-hover ease-hover placeholder:text-disabled hover:border-white/20 focus:border-accent focus:ring-2 focus:ring-accent/40";
+
+function DropZone({ id, label, hint, accept, file, onFile, previewUrl, durationLabel, warning, audio }) {
   const [hot, setHot] = useState(false);
   const inputRef = useRef(null);
 
@@ -68,16 +127,25 @@ function DropZone({ id, label, hint, accept, file, onFile, previewUrl, durationL
     if (next) onFile(next);
   }
 
+  function openPicker() {
+    inputRef.current?.click();
+  }
+
+  function onKeyDown(event) {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      openPicker();
+    }
+  }
+
   return (
     <div>
-      <label htmlFor={id} className="mb-2 block text-sm font-medium text-slate-700">
-        {label}
-      </label>
+      <FieldLabel htmlFor={id}>{label}</FieldLabel>
       <div
-        className={cx(
-          "rounded-2xl border-2 border-dashed px-4 py-5 text-center transition",
-          hot ? "border-copper bg-orange-50" : "border-slate-300 bg-[#fbfaf7]",
-        )}
+        role="button"
+        tabIndex={0}
+        onClick={openPicker}
+        onKeyDown={onKeyDown}
         onDragOver={(event) => {
           event.preventDefault();
           setHot(true);
@@ -88,119 +156,142 @@ function DropZone({ id, label, hint, accept, file, onFile, previewUrl, durationL
           setHot(false);
           take(event.dataTransfer.files);
         }}
+        className={cx(
+          "rounded-card border border-dashed px-6 py-8 text-center transition duration-hover ease-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-canvas",
+          hot ? "border-accent bg-accent/10" : "border-white/20 bg-canvas hover:border-accent/70 hover:bg-surface-hover",
+        )}
       >
         <input
           ref={inputRef}
           id={id}
           name={id}
+          tabIndex={-1}
           className="sr-only"
           type="file"
           accept={accept}
           onChange={(event) => take(event.target.files)}
         />
         {previewUrl ? (
-          <img src={previewUrl} alt="Uploaded logo preview" className="mx-auto mb-3 h-16 max-w-[180px] object-contain" />
-        ) : null}
+          <img src={previewUrl} alt="" className="mx-auto mb-4 h-16 max-w-[180px] object-contain" />
+        ) : (
+          <span className="mx-auto mb-4 flex h-10 w-10 items-center justify-center rounded-control border border-line bg-surface text-muted">
+            {file && audio ? <AudioLines strokeWidth={1.5} size={18} /> : <Upload strokeWidth={1.5} size={18} />}
+          </span>
+        )}
         {file ? (
-          <p className="text-sm font-medium text-ink">
+          <p className="font-mono text-body text-text">
             {file.name}
-            {durationLabel ? <span className="font-normal text-slate-500"> · {durationLabel}</span> : null}
+            {durationLabel ? <span className="text-muted"> · {durationLabel}</span> : null}
           </p>
         ) : (
-          <p className="text-sm text-slate-600">{hint}</p>
+          <p className="text-body text-muted">{hint}</p>
         )}
+      </div>
+      {file ? (
         <button
           type="button"
-          className="mt-3 rounded-full border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy"
-          onClick={() => inputRef.current?.click()}
+          className="mt-3 text-body text-muted underline-offset-2 transition duration-hover ease-hover hover:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-canvas"
+          onClick={() => {
+            if (inputRef.current) inputRef.current.value = "";
+            onFile(null);
+          }}
         >
-          {file ? "Replace file" : "Browse"}
+          Remove
         </button>
-        {file ? (
-          <button
-            type="button"
-            className="ml-2 text-sm text-slate-500 underline-offset-2 hover:underline"
-            onClick={() => {
-              if (inputRef.current) inputRef.current.value = "";
-              onFile(null);
-            }}
-          >
-            Remove
-          </button>
-        ) : null}
-      </div>
-      {warning ? <p className="mt-2 text-sm text-red-700">{warning}</p> : null}
+      ) : null}
+      {warning ? (
+        <p role="alert" className="mt-3 text-body text-sev-high">
+          {warning}
+        </p>
+      ) : null}
     </div>
   );
 }
 
 function ColorField({ id, label, value, onChange }) {
   return (
-    <div className="flex items-center gap-3">
-      <label htmlFor={id} className="sr-only">
-        {label}
-      </label>
-      <input
-        id={id}
-        name={id}
-        type="color"
-        value={value}
-        aria-label={label}
-        onChange={(event) => onChange(event.target.value)}
-        className="h-11 w-14 cursor-pointer rounded-lg border border-slate-200 bg-white p-1"
-      />
-      <span className="inline-flex h-11 min-w-[4.5rem] items-center justify-center rounded-lg px-2 text-xs font-semibold text-white" style={{ background: value }}>
-        {label}
-      </span>
-      <span className="font-mono text-xs uppercase tracking-wide text-slate-500">{value}</span>
+    <div>
+      <FieldLabel htmlFor={id}>{label}</FieldLabel>
+      <div className="flex items-center gap-3 rounded-control border border-line bg-canvas px-3 py-2 transition duration-hover ease-hover hover:border-white/20 focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/40">
+        <input
+          id={id}
+          name={id}
+          type="color"
+          value={value}
+          aria-label={label}
+          onChange={(event) => onChange(event.target.value)}
+          className="h-8 w-8 cursor-pointer rounded-control border border-line bg-transparent p-0"
+        />
+        <span className="font-mono text-body uppercase text-muted">{value}</span>
+      </div>
     </div>
   );
 }
 
-function Stepper({ status, failed, progress }) {
-  const activeIndex = STEPS.findIndex((step) => step.id === status);
-  const done = status === "done";
+function stepState(status, failed, index) {
+  if (status === "done") return "complete";
+  const active = PIPELINE.findIndex((step) => step.match.includes(status));
+  if (index < active) return "complete";
+  if (index === active) return failed ? "failed" : "active";
+  return "pending";
+}
+
+function Stepper({ status, failed }) {
   return (
-    <div>
-      <div className="mb-3 flex items-center justify-between text-sm">
-        <p className="font-medium text-ink" aria-live="polite">
-          {done ? "Deck ready" : failed ? "Could not finish the deck" : STEPS[activeIndex]?.label || "Working"}
-        </p>
-        <p className="tabular-nums text-slate-500">{progress ?? 0}%</p>
-      </div>
-      <div className="h-2 overflow-hidden rounded-full bg-slate-200" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress || 0}>
-        <div
-          className="h-full rounded-full bg-copper transition-all duration-700 ease-out"
-          style={{ width: `${Math.min(progress || 0, 100)}%` }}
-        />
-      </div>
-      <ol className="mt-5 space-y-3">
-        {STEPS.map((step, index) => {
-          const complete = done || (activeIndex > -1 && index < activeIndex);
-          const current = !done && !failed && index === activeIndex;
-          const broken = failed && index === activeIndex;
-          return (
-            <li key={step.id} className="flex items-start gap-3">
-              <span
-                className={cx(
-                  "mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-semibold",
-                  complete && "bg-navy text-white",
-                  current && "step-live bg-copper text-white",
-                  broken && "bg-red-700 text-white",
-                  !complete && !current && !broken && "bg-slate-200 text-slate-500",
-                )}
-                aria-hidden="true"
-              >
-                {complete ? "✓" : index + 1}
-              </span>
-              <span>
-                <span className="block text-sm font-medium text-ink">{step.label}</span>
-                <span className="block text-sm text-slate-500">{step.detail}</span>
-              </span>
-            </li>
-          );
-        })}
-      </ol>
+    <ol className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+      {PIPELINE.map((step, index) => {
+        const state = stepState(status, failed, index);
+        const Icon = state === "complete" ? Check : step.icon;
+        return (
+          <li
+            key={step.key}
+            className={cx(
+              "rounded-card border border-line bg-surface px-4 py-4 shadow-card transition duration-state ease-state",
+              state === "active" && "border-accent/50",
+              state === "failed" && "border-sev-high/50",
+            )}
+          >
+            <span
+              className={cx(
+                "mb-4 flex h-8 w-8 items-center justify-center rounded-control border",
+                state === "complete" && "border-cyan/40 text-cyan",
+                state === "active" && "border-accent/40 text-accent",
+                state === "failed" && "border-sev-high/40 text-sev-high",
+                state === "pending" && "border-line text-disabled",
+              )}
+              aria-hidden="true"
+            >
+              <Icon strokeWidth={1.5} size={16} />
+            </span>
+            <p className={cx("text-body font-medium", state === "pending" ? "text-disabled" : "text-text")}>{step.label}</p>
+            <p className="mt-1 text-eyebrow uppercase text-muted">{state === "complete" ? "Done" : state === "active" ? "Now" : state === "failed" ? "Stopped" : "Waiting"}</p>
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
+
+function SkeletonCards() {
+  return (
+    <div className="mt-8 grid gap-4" aria-hidden="true">
+      {[0, 1, 2].map((item) => (
+        <div key={item} className="rounded-card border border-line bg-surface p-6 shadow-card">
+          <div className="skeleton h-3 w-24 rounded-pill" />
+          <div className="skeleton mt-4 h-4 w-2/3 rounded-control" />
+          <div className="skeleton mt-3 h-3 w-full rounded-control" />
+          <div className="skeleton mt-2 h-3 w-5/6 rounded-control" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function Signal({ label, value }) {
+  return (
+    <div className="rounded-card border border-line bg-surface px-4 py-4 shadow-card">
+      <p className="text-eyebrow uppercase text-muted">{label}</p>
+      <p className="mt-2 text-card text-text">{value}</p>
     </div>
   );
 }
@@ -223,9 +314,10 @@ export default function HomePage() {
   const [analysis, setAnalysis] = useState(null);
   const [enrichment, setEnrichment] = useState(null);
   const [preview, setPreview] = useState(null);
-  const [slideIndex, setSlideIndex] = useState(0);
+  const [modalIndex, setModalIndex] = useState(null);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const closeRef = useRef(null);
 
   useEffect(() => {
     if (!logo) {
@@ -266,13 +358,25 @@ export default function HomePage() {
       if (analysisResponse.ok) setAnalysis(await analysisResponse.json());
       if (enrichmentResponse.ok) setEnrichment(await enrichmentResponse.json());
       if (previewResponse.ok) setPreview(await previewResponse.json());
-      setSlideIndex(0);
+      setModalIndex(null);
     }
     load().catch(() => setError("The deck finished, but the results could not be loaded."));
     return () => {
       cancelled = true;
     };
   }, [job?.id, job?.status]);
+
+  useEffect(() => {
+    if (modalIndex == null) return undefined;
+    closeRef.current?.focus();
+    function onKey(event) {
+      if (event.key === "Escape") setModalIndex(null);
+      if (event.key === "ArrowRight") setModalIndex((index) => (index == null ? index : Math.min(index + 1, (preview?.slides?.length || 1) - 1)));
+      if (event.key === "ArrowLeft") setModalIndex((index) => (index == null ? index : Math.max(index - 1, 0)));
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [modalIndex, preview?.slides?.length]);
 
   async function chooseAudio(file) {
     setAudio(file);
@@ -321,329 +425,438 @@ export default function HomePage() {
     }
   }
 
-  const slides = preview?.slides || [];
-  const currentSlide = slides[slideIndex];
-  const busy = submitting || (job && job.status !== "done" && job.status !== "failed");
-  const hasEnrichment = Boolean(
-    enrichment && (enrichment.verified_description || enrichment.logo_url || enrichment.recent_news_snippet),
-  );
-  const customer = form.company_name.trim() || "Your customer";
-
-  function moveSlide(delta) {
-    if (!slides.length) return;
-    setSlideIndex((index) => (index + delta + slides.length) % slides.length);
+  function reset() {
+    setJob(null);
+    setAnalysis(null);
+    setEnrichment(null);
+    setPreview(null);
+    setModalIndex(null);
+    setError("");
+    setStage("queued");
   }
 
+  const slides = preview?.slides || [];
+  const busy = submitting || (job && job.status !== "done" && job.status !== "failed");
+  const hasEnrichment = Boolean(enrichment && (enrichment.verified_description || enrichment.logo_url || enrichment.recent_news_snippet));
+  const customer = form.company_name.trim() || analysis?.company_name || "The customer";
+  const view = !job ? "upload" : job.status === "done" ? "results" : "processing";
+  const pipelineStatus = job?.status === "failed" ? stage : job?.status;
+  const deckStyle = {
+    "--deck-primary": form.brand_color_primary,
+    "--deck-secondary": form.brand_color_secondary,
+  };
+
   return (
-    <div>
-      <header className="bg-ink text-white">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-5">
-          <p className="text-sm font-semibold tracking-tight">Demo to Deck</p>
-          <p className="text-sm text-white/70">Runs locally · No hosted LLM</p>
-        </div>
-        <div className="mx-auto max-w-6xl px-5 pb-16 pt-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-copper">Sales leave-behind</p>
-          <h1 className="mt-3 max-w-3xl text-4xl font-semibold tracking-tight sm:text-5xl">
-            Turn a raw sales call into a branded, customer-specific deck.
-          </h1>
+    <div className="min-h-screen bg-canvas">
+      <header className="border-b border-line">
+        <div className="mx-auto flex h-16 max-w-5xl items-center px-6">
+          <Wordmark />
         </div>
       </header>
 
-      <main className="mx-auto -mt-8 grid max-w-6xl gap-6 px-5 pb-16 lg:grid-cols-[minmax(0,390px)_minmax(0,1fr)]">
-        <form id={formId} className="rounded-3xl bg-white p-5 shadow-card sm:p-6" onSubmit={onSubmit}>
-          <DropZone
-            id="audio_file"
-            label="Sales call"
-            hint="Drop a recording here, up to 20 minutes."
-            accept="audio/*,video/mp4,video/webm"
-            file={audio}
-            durationLabel={formatClock(audioSeconds)}
-            warning={audioSeconds > 20 * 60 ? "This recording is longer than 20 minutes." : ""}
-            onFile={chooseAudio}
-          />
-
-          <label htmlFor="salesperson_name" className="mb-2 mt-5 block text-sm font-medium text-slate-700">
-            Salesperson
-          </label>
-          <input
-            id="salesperson_name"
-            name="salesperson_name"
-            required
-            value={form.salesperson_name}
-            onChange={(event) => setForm({ ...form, salesperson_name: event.target.value })}
-            className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none ring-navy focus:ring-2"
-            autoComplete="name"
-          />
-
-          <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
-            <div>
-              <label htmlFor="company_name" className="mb-2 block text-sm font-medium text-slate-700">
-                Company name <span className="font-normal text-slate-400">optional</span>
-              </label>
-              <input
-                id="company_name"
-                name="company_name"
-                value={form.company_name}
-                onChange={(event) => setForm({ ...form, company_name: event.target.value })}
-                className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none ring-navy focus:ring-2"
-              />
-            </div>
-            <div>
-              <label htmlFor="company_domain" className="mb-2 block text-sm font-medium text-slate-700">
-                Company domain <span className="font-normal text-slate-400">optional</span>
-              </label>
-              <input
-                id="company_domain"
-                name="company_domain"
-                placeholder="acme.com"
-                value={form.company_domain}
-                onChange={(event) => setForm({ ...form, company_domain: event.target.value })}
-                className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none ring-navy focus:ring-2"
-              />
-            </div>
-          </div>
-
-          <fieldset className="mt-5">
-            <legend className="mb-3 text-sm font-medium text-slate-700">Brand colors</legend>
-            <div className="space-y-3">
-              <ColorField
-                id="brand_color_primary"
-                label="Primary"
-                value={form.brand_color_primary}
-                onChange={(value) => setForm({ ...form, brand_color_primary: value })}
-              />
-              <ColorField
-                id="brand_color_secondary"
-                label="Secondary"
-                value={form.brand_color_secondary}
-                onChange={(value) => setForm({ ...form, brand_color_secondary: value })}
-              />
-            </div>
-            <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200">
-              <div className="h-2" style={{ background: form.brand_color_primary }} />
-              <div className="px-4 py-3">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.14em]" style={{ color: form.brand_color_secondary }}>
-                  Opportunity brief
-                </p>
-                <p className="mt-1 text-lg font-semibold" style={{ color: form.brand_color_primary }}>
-                  {customer}
-                </p>
-              </div>
-            </div>
-          </fieldset>
-
-          <div className="mt-5">
-            <DropZone
-              id="logo_file"
-              label="Logo, optional"
-              hint="Drop a PNG, JPG, or WEBP. It lands on the title slide."
-              accept="image/png,image/jpeg,image/webp,image/gif"
-              file={logo}
-              previewUrl={logoUrl}
-              onFile={setLogo}
+      <main className="mx-auto max-w-5xl px-6 pb-16 pt-16">
+        {view === "upload" ? (
+          <section className="state-enter relative">
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute -top-24 left-1/2 h-72 w-[36rem] -translate-x-1/2 rounded-full opacity-70 blur-3xl"
+              style={{
+                background:
+                  "radial-gradient(closest-side, rgba(124,106,239,0.28), rgba(34,211,238,0.08) 55%, transparent 72%)",
+              }}
             />
-          </div>
+            <div className="relative">
+              <p className="text-eyebrow uppercase text-muted">From the recording</p>
+              <h1 className="mt-4 max-w-3xl text-hero-mobile text-text md:text-hero">Turn any sales call into a pitch deck.</h1>
+              <p className="mt-6 max-w-xl text-body text-muted">
+                Transcribed on this machine. Pain points in the customer’s words. A deck in your colors, with the solve column left blank.
+              </p>
 
-          <button
-            type="submit"
-            disabled={busy}
-            aria-busy={submitting}
-            className="mt-6 w-full rounded-full bg-navy px-4 py-3 text-sm font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-copper disabled:cursor-wait disabled:opacity-60"
-          >
-            {submitting ? "Uploading…" : busy ? "Building the deck…" : "Create deck"}
-          </button>
-          {error ? (
-            <p role="alert" className="mt-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
-              {error}
-            </p>
-          ) : null}
-        </form>
-
-        <section className="min-w-0 space-y-6" aria-label="Deck progress and results">
-          {!job ? (
-            <div className="rounded-3xl bg-white p-6 shadow-card">
-              <h2 className="text-lg font-semibold">What you get back</h2>
-              <ul className="mt-4 space-y-3 text-sm text-slate-600">
-                <li>A title slide in your colors, with the customer name and logo.</li>
-                <li>Pain points the customer actually said, each with the quote.</li>
-                <li>A solution table whose “How we solve it” column is left blank.</li>
-              </ul>
-            </div>
-          ) : null}
-
-          {job ? (
-            <div className="rounded-3xl bg-white p-6 shadow-card">
-              <Stepper
-                status={job.status === "failed" ? stage : job.status}
-                failed={job.status === "failed"}
-                progress={job.progress}
-              />
-              {job.status === "failed" && job.error ? (
-                <p role="alert" className="mt-4 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
-                  {job.error}
-                </p>
-              ) : null}
-              {job.status === "done" ? (
-                <a
-                  className="mt-5 inline-flex rounded-full bg-copper px-5 py-3 text-sm font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy"
-                  href={`${API_URL}/api/jobs/${job.id}/download`}
-                >
-                  Download deck
-                </a>
-              ) : null}
-            </div>
-          ) : null}
-
-          {preview?.placeholder ? (
-            <p className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
-              Preview images are placeholders because slide rasterization was unavailable. The download is still the real deck.
-            </p>
-          ) : null}
-
-          {currentSlide ? (
-            <div className="rounded-3xl bg-white p-4 shadow-card sm:p-5">
-              <div className="mb-3 flex items-center justify-between">
-                <h2 className="text-sm font-semibold uppercase tracking-[0.14em] text-slate-500">Slides</h2>
-                <p className="text-sm tabular-nums text-slate-500">
-                  {slideIndex + 1} / {slides.length}
-                </p>
-              </div>
-              <div className="relative">
-                <img
-                  src={`${API_URL}${currentSlide.url}`}
-                  alt={`Slide ${slideIndex + 1} of ${slides.length}`}
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50"
-                />
-                <div className="mt-3 flex gap-2">
-                  <button
-                    type="button"
-                    className="rounded-full border border-slate-200 px-3 py-1.5 text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy"
-                    onClick={() => moveSlide(-1)}
-                    aria-label="Previous slide"
-                  >
-                    Previous
-                  </button>
-                  <button
-                    type="button"
-                    className="rounded-full border border-slate-200 px-3 py-1.5 text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy"
-                    onClick={() => moveSlide(1)}
-                    aria-label="Next slide"
-                  >
-                    Next
-                  </button>
+              <form id={formId} className="mt-12 rounded-card border border-line bg-surface p-6 shadow-card md:p-8" onSubmit={onSubmit}>
+                <h2 className="text-section text-text">The recording</h2>
+                <div className="mt-6">
+                  <DropZone
+                    id="audio_file"
+                    label="Call audio"
+                    hint="Drop your call recording or click to browse"
+                    accept="audio/*,video/mp4,video/webm"
+                    file={audio}
+                    audio
+                    durationLabel={formatClock(audioSeconds)}
+                    warning={audioSeconds > 20 * 60 ? "This recording is longer than 20 minutes." : ""}
+                    onFile={chooseAudio}
+                  />
                 </div>
-              </div>
-              <div className="mt-4 flex gap-2 overflow-x-auto pb-1">
-                {slides.map((slide, index) => (
-                  <button
-                    key={slide.name}
-                    type="button"
-                    aria-label={`Show slide ${index + 1}`}
-                    aria-current={index === slideIndex}
-                    onClick={() => setSlideIndex(index)}
-                    className={cx(
-                      "w-24 shrink-0 overflow-hidden rounded-lg border-2",
-                      index === slideIndex ? "border-copper" : "border-transparent",
-                    )}
-                  >
-                    <img src={`${API_URL}${slide.url}`} alt="" className="h-14 w-full object-cover" />
-                  </button>
-                ))}
-              </div>
-            </div>
-          ) : null}
 
-          {analysis ? (
-            <div className="space-y-4">
-              <div className="rounded-3xl bg-white p-6 shadow-card">
-                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-copper">{analysis.industry_guess}</p>
-                <h2 className="mt-1 text-2xl font-semibold tracking-tight">{analysis.company_name || customer}</h2>
-                <p className="mt-3 text-sm leading-6 text-slate-700">{analysis.call_summary}</p>
-              </div>
-
-              <div className="grid gap-3 sm:grid-cols-3">
-                <Signal label="Budget" value={analysis.buying_signals?.budget_mentioned ? analysis.buying_signals.budget_detail || "Mentioned" : "Not mentioned"} />
-                <Signal label="Timeline" value={analysis.buying_signals?.timeline_mentioned || "Not mentioned"} />
-                <Signal label="Decision maker" value={analysis.buying_signals?.decision_maker_present ? "On the call" : "Not confirmed"} />
-              </div>
-
-              <div className="grid gap-4">
-                {(analysis.pain_points || []).map((point) => (
-                  <article key={point.id} className="rounded-3xl bg-white p-5 shadow-card">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className={cx("rounded-full px-2.5 py-1 text-xs font-semibold uppercase tracking-wide ring-1", SEVERITY_STYLE[point.severity] || SEVERITY_STYLE.medium)}>
-                        {point.severity}
-                      </span>
-                      <span className="rounded-full bg-orange-50 px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-copper">
-                        {point.category}
-                      </span>
-                    </div>
-                    <h3 className="mt-3 text-lg font-semibold">{point.title}</h3>
-                    <p className="mt-2 text-sm leading-6 text-slate-700">{point.description}</p>
-                    <blockquote className="mt-4 border-l-4 border-copper pl-4 text-sm italic leading-6 text-slate-600">
-                      “{point.quote}”
-                    </blockquote>
-                  </article>
-                ))}
-              </div>
-
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="rounded-3xl bg-white p-5 shadow-card">
-                  <h3 className="text-sm font-semibold uppercase tracking-[0.14em] text-slate-500">Objections</h3>
-                  <ul className="mt-3 space-y-3 text-sm">
-                    {(analysis.objections || []).length ? (
-                      analysis.objections.map((item) => (
-                        <li key={item.objection}>
-                          <p className="text-ink">{item.objection}</p>
-                          <p className="text-slate-500">{item.handled_on_call ? "Addressed on the call" : "Still open"}</p>
-                        </li>
-                      ))
-                    ) : (
-                      <li className="text-slate-500">None captured.</li>
-                    )}
-                  </ul>
+                <div className="mt-6">
+                  <FieldLabel htmlFor="salesperson_name">Salesperson</FieldLabel>
+                  <input
+                    id="salesperson_name"
+                    name="salesperson_name"
+                    required
+                    value={form.salesperson_name}
+                    onChange={(event) => setForm({ ...form, salesperson_name: event.target.value })}
+                    className={fieldClass}
+                    autoComplete="name"
+                  />
                 </div>
-                <div className="rounded-3xl bg-white p-5 shadow-card">
-                  <h3 className="text-sm font-semibold uppercase tracking-[0.14em] text-slate-500">Next steps</h3>
-                  <ol className="mt-3 list-decimal space-y-2 pl-5 text-sm text-slate-700">
-                    {(analysis.next_steps || []).map((step) => (
-                      <li key={step}>{step}</li>
-                    ))}
-                  </ol>
-                </div>
-              </div>
 
-              <div className="rounded-3xl bg-white p-5 shadow-card">
-                <h3 className="text-sm font-semibold uppercase tracking-[0.14em] text-slate-500">Suggested angle</h3>
-                <p className="mt-2 text-sm leading-6 text-slate-700">{analysis.recommended_solution_angle}</p>
-              </div>
-
-              <div className="rounded-3xl bg-white p-5 shadow-card">
-                <h3 className="text-sm font-semibold uppercase tracking-[0.14em] text-slate-500">Company enrichment</h3>
-                {hasEnrichment ? (
-                  <div className="mt-3 space-y-2 text-sm text-slate-700">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-copper">{enrichment.source}</p>
-                    {enrichment.verified_description ? <p>{enrichment.verified_description}</p> : null}
-                    {enrichment.recent_news_snippet ? <p>Recently: {enrichment.recent_news_snippet}</p> : null}
-                    {enrichment.logo_url ? <p className="break-all text-slate-500">Logo: {enrichment.logo_url}</p> : null}
+                <div className="mt-6 grid gap-6 sm:grid-cols-2">
+                  <div>
+                    <FieldLabel htmlFor="company_name" optional>
+                      Company name
+                    </FieldLabel>
+                    <input
+                      id="company_name"
+                      name="company_name"
+                      value={form.company_name}
+                      onChange={(event) => setForm({ ...form, company_name: event.target.value })}
+                      className={fieldClass}
+                    />
                   </div>
-                ) : (
-                  <p className="mt-2 text-sm text-slate-600">No public company profile was attached. The deck still uses the call.</p>
-                )}
-              </div>
-            </div>
-          ) : null}
-        </section>
-      </main>
-    </div>
-  );
-}
+                  <div>
+                    <FieldLabel htmlFor="company_domain" optional>
+                      Company domain
+                    </FieldLabel>
+                    <input
+                      id="company_domain"
+                      name="company_domain"
+                      placeholder="acme.com"
+                      value={form.company_domain}
+                      onChange={(event) => setForm({ ...form, company_domain: event.target.value })}
+                      className={fieldClass}
+                    />
+                  </div>
+                </div>
 
-function Signal({ label, value }) {
-  return (
-    <div className="rounded-2xl bg-white px-4 py-3 shadow-card">
-      <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">{label}</p>
-      <p className="mt-1 text-sm font-medium text-ink">{value}</p>
+                <fieldset className="mt-6">
+                  <legend className="mb-4 text-eyebrow uppercase text-muted">Deck colors</legend>
+                  <div className="grid gap-6 sm:grid-cols-2">
+                    <ColorField
+                      id="brand_color_primary"
+                      label="Primary"
+                      value={form.brand_color_primary}
+                      onChange={(value) => setForm({ ...form, brand_color_primary: value })}
+                    />
+                    <ColorField
+                      id="brand_color_secondary"
+                      label="Secondary"
+                      value={form.brand_color_secondary}
+                      onChange={(value) => setForm({ ...form, brand_color_secondary: value })}
+                    />
+                  </div>
+                  <p className="mt-3 text-body text-muted">Used on the slides only. This page stays indigo.</p>
+                </fieldset>
+
+                <div className="mt-6">
+                  <DropZone
+                    id="logo_file"
+                    label="Logo"
+                    hint="Drop a PNG, JPG, or WEBP for the title slide"
+                    accept="image/png,image/jpeg,image/webp,image/gif"
+                    file={logo}
+                    previewUrl={logoUrl}
+                    onFile={setLogo}
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={busy}
+                  aria-busy={submitting}
+                  className="mt-8 inline-flex w-full items-center justify-center rounded-control bg-accent px-4 py-3 text-button text-white shadow-card transition duration-hover ease-hover hover:shadow-glow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface disabled:cursor-not-allowed disabled:bg-surface-hover disabled:text-disabled disabled:shadow-none"
+                >
+                  {submitting ? "Uploading" : "Create deck"}
+                </button>
+                {error ? (
+                  <p role="alert" className="mt-4 rounded-control border border-sev-high/30 bg-canvas px-3 py-2 text-body text-sev-high">
+                    {error}
+                  </p>
+                ) : null}
+              </form>
+            </div>
+          </section>
+        ) : null}
+
+        {view === "processing" ? (
+          <section className="state-enter" aria-live="polite">
+            <p className="text-eyebrow uppercase text-muted">Pipeline</p>
+            <h1 className="mt-4 text-section text-text">{job?.status === "failed" ? "The deck did not finish" : "Building the deck"}</h1>
+            <p className="mt-3 max-w-xl text-body text-muted">
+              {customer === "The customer" ? "The call is moving through the local pipeline." : `${customer} is moving through the local pipeline.`}
+            </p>
+            <div className="mt-8">
+              <Stepper status={pipelineStatus} failed={job?.status === "failed"} />
+            </div>
+            {job?.status === "failed" && job.error ? (
+              <p role="alert" className="mt-6 rounded-control border border-sev-high/30 bg-surface px-4 py-3 text-body text-sev-high">
+                {job.error}
+              </p>
+            ) : null}
+            {error ? (
+              <p role="alert" className="mt-4 text-body text-sev-high">
+                {error}
+              </p>
+            ) : null}
+            {job?.status !== "failed" ? <SkeletonCards /> : null}
+            {job?.status === "failed" ? (
+              <button
+                type="button"
+                onClick={reset}
+                className="mt-8 rounded-control border border-line bg-surface px-4 py-3 text-button text-text shadow-card transition duration-hover ease-hover hover:bg-surface-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-canvas"
+              >
+                Start over
+              </button>
+            ) : null}
+          </section>
+        ) : null}
+
+        {view === "results" ? (
+          <section className="state-enter">
+            <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <span className="check-in mb-4 flex h-10 w-10 items-center justify-center rounded-full border border-cyan/40 text-cyan">
+                  <Check strokeWidth={1.5} size={18} />
+                </span>
+                <p className="text-eyebrow uppercase text-cyan">Deck ready</p>
+                <h1 className="mt-3 text-section text-text">{customer}</h1>
+                {analysis?.call_summary ? <p className="mt-3 max-w-2xl text-body text-muted">{analysis.call_summary}</p> : null}
+              </div>
+              <a
+                className="inline-flex items-center justify-center gap-2 rounded-control bg-accent px-5 py-3 text-button text-white shadow-card transition duration-hover ease-hover hover:shadow-glow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-canvas"
+                href={`${API_URL}/api/jobs/${job.id}/download`}
+              >
+                <Download strokeWidth={1.5} size={16} />
+                Download deck
+              </a>
+            </div>
+
+            {preview?.placeholder ? (
+              <p className="mt-6 rounded-card border border-line bg-surface px-4 py-3 text-body text-muted">
+                Slide images are placeholders. The download is the real deck.
+              </p>
+            ) : null}
+
+            {slides.length ? (
+              <div className="deck-preview mt-10 rounded-card border border-line bg-surface p-4 shadow-card sm:p-6" style={deckStyle}>
+                <div className="mb-4 h-1 w-16 rounded-pill" style={{ background: "var(--deck-primary)" }} />
+                <div className="flex items-end justify-between gap-4">
+                  <h2 className="text-section text-text">Slides</h2>
+                  <p className="font-mono text-body text-muted">{String(slides.length).padStart(2, "0")}</p>
+                </div>
+                <div className="mt-6 grid grid-cols-2 gap-4 md:grid-cols-3">
+                  {slides.map((slide, index) => (
+                    <button
+                      key={slide.name}
+                      type="button"
+                      onClick={() => setModalIndex(index)}
+                      aria-label={`Open slide ${index + 1}`}
+                      className="group overflow-hidden rounded-card border border-line bg-canvas text-left shadow-card transition duration-hover ease-hover hover:scale-[1.02] hover:shadow-glow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
+                    >
+                      <img src={`${API_URL}${slide.url}`} alt="" className="aspect-video w-full object-cover" />
+                      <span className="block px-3 py-2 font-mono text-[12px] text-muted">
+                        {String(index + 1).padStart(2, "0")}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+
+            {analysis ? (
+              <div className="mt-12">
+                <p className="text-eyebrow uppercase text-muted">{analysis.industry_guess}</p>
+                <h2 className="mt-3 text-section text-text">Pain points</h2>
+                <div className="mt-6 grid gap-4">
+                  {(analysis.pain_points || []).map((point) => {
+                    const severity = SEVERITY[point.severity] || SEVERITY.medium;
+                    const category = CATEGORY[point.category] || CATEGORY.other;
+                    return (
+                      <article
+                        key={point.id}
+                        className="rounded-card border border-line bg-surface p-6 shadow-card transition duration-hover ease-hover hover:scale-[1.02] hover:bg-surface-hover"
+                        style={{ borderLeftWidth: 3, borderLeftColor: severity }}
+                      >
+                        <div className="flex flex-wrap items-center gap-3">
+                          <span
+                            className="rounded-pill border px-2.5 py-1 text-eyebrow uppercase"
+                            style={{ color: severity, borderColor: severity }}
+                          >
+                            {point.severity}
+                          </span>
+                          <span className="inline-flex items-center gap-2 text-eyebrow uppercase text-muted">
+                            <span className="h-1.5 w-1.5 rounded-full" style={{ background: category }} />
+                            {point.category}
+                          </span>
+                        </div>
+                        <h3 className="mt-4 text-card text-text">{point.title}</h3>
+                        <p className="mt-2 text-body text-muted">{point.description}</p>
+                        <blockquote className="relative mt-4 rounded-control border border-line bg-canvas px-4 py-3 pl-10 text-body text-text">
+                          <span aria-hidden="true" className="absolute left-3 top-1 text-[28px] leading-none text-accent">
+                            “
+                          </span>
+                          {point.quote}
+                        </blockquote>
+                      </article>
+                    );
+                  })}
+                </div>
+
+                <h2 className="mt-12 text-section text-text">Buying signals</h2>
+                <div className="mt-6 grid gap-4 sm:grid-cols-3">
+                  <Signal
+                    label="Budget"
+                    value={analysis.buying_signals?.budget_mentioned ? analysis.buying_signals.budget_detail || "Mentioned" : "Not mentioned"}
+                  />
+                  <Signal label="Timeline" value={analysis.buying_signals?.timeline_mentioned || "Not mentioned"} />
+                  <Signal label="Decision maker" value={analysis.buying_signals?.decision_maker_present ? "On the call" : "Not confirmed"} />
+                </div>
+
+                <h2 className="mt-12 text-section text-text">Objections</h2>
+                <div className="mt-6 overflow-hidden rounded-card border border-line bg-surface shadow-card">
+                  <table className="w-full text-left">
+                    <thead>
+                      <tr className="border-b border-line">
+                        <th className="px-4 py-3 text-eyebrow font-medium uppercase text-muted">Objection</th>
+                        <th className="px-4 py-3 text-eyebrow font-medium uppercase text-muted">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(analysis.objections || []).length ? (
+                        analysis.objections.map((item) => (
+                          <tr key={item.objection} className="border-b border-line last:border-0">
+                            <td className="px-4 py-3 text-body text-text">{item.objection}</td>
+                            <td className="px-4 py-3 text-body text-muted">{item.handled_on_call ? "Addressed" : "Open"}</td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td className="px-4 py-3 text-body text-muted" colSpan={2}>
+                            None captured
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+
+                <h2 className="mt-12 text-section text-text">Next steps</h2>
+                <ol className="mt-6 grid gap-3">
+                  {(analysis.next_steps || []).map((step, index) => (
+                    <li key={step} className="flex gap-4 rounded-card border border-line bg-surface px-4 py-4 shadow-card">
+                      <span className="font-mono text-body text-muted">{String(index + 1).padStart(2, "0")}</span>
+                      <span className="text-body text-text">{step}</span>
+                    </li>
+                  ))}
+                </ol>
+
+                {analysis.recommended_solution_angle ? (
+                  <div className="mt-6 rounded-card border border-line bg-surface p-6 shadow-card">
+                    <p className="text-eyebrow uppercase text-muted">Suggested angle</p>
+                    <p className="mt-3 text-body text-text">{analysis.recommended_solution_angle}</p>
+                  </div>
+                ) : null}
+
+                {hasEnrichment ? (
+                  <div className="mt-12">
+                    <h2 className="text-section text-text">Company</h2>
+                    <article className="mt-6 rounded-card border border-line bg-surface p-6 shadow-card">
+                      <div className="flex items-start gap-4">
+                        {enrichment.logo_url ? (
+                          <img src={enrichment.logo_url} alt="" className="h-12 w-12 rounded-control border border-line bg-canvas object-contain p-1" />
+                        ) : null}
+                        <div>
+                          <p className="text-eyebrow uppercase text-muted">{enrichment.source}</p>
+                          {enrichment.verified_description ? <p className="mt-3 text-body text-text">{enrichment.verified_description}</p> : null}
+                        </div>
+                      </div>
+                      {enrichment.recent_news_snippet ? (
+                        <blockquote className="mt-4 border-l border-line pl-4 text-body text-muted">{enrichment.recent_news_snippet}</blockquote>
+                      ) : null}
+                    </article>
+                  </div>
+                ) : null}
+              </div>
+            ) : (
+              <SkeletonCards />
+            )}
+
+            <button
+              type="button"
+              onClick={reset}
+              className="mt-12 rounded-control border border-line bg-surface px-4 py-3 text-button text-text transition duration-hover ease-hover hover:bg-surface-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-canvas"
+            >
+              New recording
+            </button>
+          </section>
+        ) : null}
+      </main>
+
+      <footer className="border-t border-line">
+        <div className="mx-auto max-w-5xl px-6 py-8">
+          <Wordmark muted size={20} />
+          <p className="mt-2 text-[12px] text-muted">Built at SpaceXAI Hackathon.</p>
+        </div>
+      </footer>
+
+      {modalIndex != null && slides[modalIndex] ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-[#0A0A0F]/80 p-4 sm:p-8"
+          onClick={() => setModalIndex(null)}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label={`Slide ${modalIndex + 1}`}
+            className="w-full max-w-5xl rounded-card border border-line bg-surface p-4 shadow-card sm:p-6"
+            style={deckStyle}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="mb-4 flex items-center justify-between">
+              <p className="font-mono text-body text-muted">
+                {String(modalIndex + 1).padStart(2, "0")} / {String(slides.length).padStart(2, "0")}
+              </p>
+              <button
+                ref={closeRef}
+                type="button"
+                aria-label="Close preview"
+                onClick={() => setModalIndex(null)}
+                className="flex h-9 w-9 items-center justify-center rounded-control border border-line text-text transition duration-hover ease-hover hover:bg-surface-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+              >
+                <X strokeWidth={1.5} size={16} />
+              </button>
+            </div>
+            <img
+              src={`${API_URL}${slides[modalIndex].url}`}
+              alt={`Slide ${modalIndex + 1} of ${slides.length}`}
+              className="w-full rounded-control border border-line bg-canvas"
+              style={{ boxShadow: "inset 3px 0 0 var(--deck-primary)" }}
+            />
+            <div className="mt-4 flex gap-3">
+              <button
+                type="button"
+                aria-label="Previous slide"
+                disabled={modalIndex === 0}
+                onClick={() => setModalIndex((index) => Math.max(0, index - 1))}
+                className="inline-flex items-center gap-2 rounded-control border border-line bg-canvas px-3 py-2 text-button text-text transition duration-hover ease-hover hover:bg-surface-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:text-disabled"
+              >
+                <ChevronLeft strokeWidth={1.5} size={16} />
+                Previous
+              </button>
+              <button
+                type="button"
+                aria-label="Next slide"
+                disabled={modalIndex === slides.length - 1}
+                onClick={() => setModalIndex((index) => Math.min(slides.length - 1, index + 1))}
+                className="inline-flex items-center gap-2 rounded-control border border-line bg-canvas px-3 py-2 text-button text-text transition duration-hover ease-hover hover:bg-surface-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:text-disabled"
+              >
+                Next
+                <ChevronRight strokeWidth={1.5} size={16} />
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
